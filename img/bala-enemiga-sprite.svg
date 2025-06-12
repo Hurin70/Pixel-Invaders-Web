@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 5 10">
+  <!-- Bala enemiga -->
+  <path d="M2.5 10 L5 7 L5 0 L0 0 L0 7 Z" fill="#0066ff" stroke="#003399" stroke-width="0.5"/>
+  <path d="M2.5 10 L3.5 7 L1.5 7 Z" fill="#00ffff" stroke="#003399" stroke-width="0.3"/>
+</svg>

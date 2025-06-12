@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 5 10">
+  <!-- Bala del jugador -->
+  <path d="M2.5 0 L5 3 L5 10 L0 10 L0 3 Z" fill="#ff3300" stroke="#cc0000" stroke-width="0.5"/>
+  <path d="M2.5 0 L3.5 3 L1.5 3 Z" fill="#ffff00" stroke="#cc0000" stroke-width="0.3"/>
+</svg>
