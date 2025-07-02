@@ -1,0 +1,79 @@
+# Pixel Invaders
+
+![Pixel Invaders Gameplay Screenshot](https://imgur.com/a/3pyDseN)
+
+A classic, fast-paced 2D space shooter (Shoot 'em Up) meticulously crafted with Python and Pygame. This project exemplifies robust Object-Oriented Programming (OOP) principles, clean architectural design, and scalable game mechanics, developed as a comprehensive Final Degree Project (TFG).
+
+## Table of Contents
+
+- [About the Project](#about-the-project)
+- [Key Features](#key-features)
+- [Technical Stack](#technical-stack)
+- [Getting Started](#getting-started)
+  - [Prerequisites](#prerequisites)
+  - [Installation](#installation)
+  - [Running the Game](#running-the-game)
+- [How to Play](#how-to-play)
+- [Detailed Project Structure](#detailed-project-structure)
+- [UML Class Diagram](#uml-class-diagram)
+- [Development Challenges & Innovative Solutions](#development-challenges--innovative-solutions)
+- [Future Enhancements & Vision](#future-enhancements--vision)
+- [Contributing](#contributing)
+- [License](#license)
+- [Contact](#contact)
+- [Acknowledgments](#acknowledgments)
+
+## About the Project
+
+Pixel Invaders plunges players into an intense arcade experience where strategic movement and precise shooting are key to survival. Inspired by timeless classics like "Space Invaders" and "Galaga," this game elevates the genre with modern design considerations, diverse enemy behaviors, and dynamic progression. As a final degree project, the primary focus was not just on game creation, but on demonstrating a strong understanding of software engineering best practices, including:
+
+* **Modular Design:** Breaking down complex game systems into manageable, independent modules.
+* **Object-Oriented Paradigms:** Extensive use of inheritance, polymorphism, and encapsulation for flexible and maintainable code.
+* **Scalability:** Designing systems (e.g., graphics rendering) that adapt to various environments and future content additions.
+
+This project serves as a tangible demonstration of applying theoretical computer science concepts to a practical, engaging application.
+
+## Key Features
+
+Pixel Invaders boasts a rich set of features designed to provide a compelling gameplay experience:
+
+* **Dynamic Player Ship:**
+    * Responsive controls for precise horizontal and vertical movement.
+    * Standard projectile firing, with upgrade potential.
+* **Varied Enemy Ecosystem:**
+    * **Standard Enemies:** (`NaveRoja`, `NaveAmarilla`, `NaveVerde`) Each with unique, predictable movement patterns (e.g., direct descent, horizontal oscillation, player-tracking) and distinct firing frequencies/styles.
+    * **Special Enemies:** (`NaveNaranja`) Introduces strategic elements by dropping powerful modifiers upon defeat.
+    * **Challenging Bosses:** (`Jefe`) Unique boss entities appear at the end of waves, featuring increased health, complex attack patterns, and special abilities (e.g., temporarily pausing all other on-screen enemies).
+* **Strategic Power-Ups:**
+    * **Shield (`Escudo`):** Provides temporary invulnerability against a set number of impacts.
+    * **Triple Shot (`DisparoTriple`):** Significantly boosts player offense by firing multiple projectiles simultaneously.
+* **Progressive Difficulty:**
+    * A dynamic wave-based system ensures escalating challenge as players advance.
+    * Enemy count, speed, and firing rates increase with each successful wave.
+* **High Score System:**
+    * Persistent high score tracking, saved locally in `puntuaciones.json`, encouraging replayability and competitive spirit.
+* **Immersive Audiovisuals:**
+    * Animated starry backgrounds (`FondoAnimado`) that parallax to create a sense of depth and motion.
+    * Explosive visual effects (`Explosion`) for destroyed entities, enhancing feedback.
+    * Adaptive background music (`ManejadorMusica`) that changes with game phases, alongside distinct sound effects for actions like firing, hits, and power-up collection.
+* **Resolution Adaptability:** The game's rendering system is designed to scale sprites and UI elements fluidly to different screen resolutions, ensuring a consistent visual experience across various displays.
+
+## Technical Stack
+
+* **Language:** Python 3.x
+* **Game Development Library:** Pygame
+* **Data Persistence:** JSON for high score management
+* **Version Control:** Git & GitHub
+
+## Getting Started
+
+To experience Pixel Invaders locally, follow these simple instructions.
+
+### Prerequisites
+
+Ensure you have Python 3.x installed on your system.
+The primary dependency is the Pygame library, which can be installed via pip:
+
+```bash
+pip install pygame
+
