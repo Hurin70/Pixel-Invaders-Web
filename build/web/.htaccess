@@ -1,0 +1,27 @@
+# =============================================
+# REQUERIDO para Pygbag / WebAssembly / WASM
+# Sin estas cabeceras el juego NO arrancará
+# =============================================
+
+# Cabeceras de seguridad cruzada (OBLIGATORIO para SharedArrayBuffer)
+# "credentialless" permite cargar recursos del CDN externo (pygame-web.github.io)
+# sin bloquearlos, a la vez que habilita SharedArrayBuffer
+Header always set Cross-Origin-Embedder-Policy "credentialless"
+Header always set Cross-Origin-Opener-Policy "same-origin"
+
+# Tipos MIME correctos
+AddType application/wasm .wasm
+AddType application/octet-stream .apk
+AddType application/octet-stream .data
+AddType application/gzip .gz
+
+# Caché para archivos grandes (mejora rendimiento en recargas)
+<FilesMatch "\.(tar\.gz|apk|wasm|data)$">
+    Header set Cache-Control "public, max-age=86400"
+</FilesMatch>
+
+# Activar módulo headers si no está activo
+<IfModule mod_headers.c>
+    Header always set Cross-Origin-Embedder-Policy "credentialless"
+    Header always set Cross-Origin-Opener-Policy "same-origin"
+</IfModule>

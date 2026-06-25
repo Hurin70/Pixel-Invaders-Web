@@ -5,9 +5,9 @@ import os
 import json
 import time
 import math
+import asyncio
 
 import sys
-import subprocess
 
 from FondoAnimado import FondoAnimado
 from Personaje import Nave
@@ -412,7 +412,7 @@ def render_texto_dorado(texto, fuente, ancho, alto, destello_x):
     texto_dorado.blit(destello, (destello_x % texto_img.get_width(), 0), special_flags=pygame.BLEND_ADD)
     return texto_dorado
 
-def mostrar_pantalla_inicio():
+async def mostrar_pantalla_inicio():
     font_title = pygame.font.Font(os.path.join(FUENTES_PATH, "PressStart2P-Regular.ttf"), int(60 * FACTOR_ESCALA))
     font_instructions = pygame.font.Font(os.path.join(FUENTES_PATH, "PressStart2P-Regular.ttf"), int(14 * FACTOR_ESCALA))
     destello_x = 0
@@ -466,7 +466,7 @@ def mostrar_pantalla_inicio():
         blit_centrado_letterbox()
         destello_x += int(8 * FACTOR_ESCALA)  # Velocidad del destello
         reloj.tick(60)
-        
+        await asyncio.sleep(0)
         
 
 
@@ -485,7 +485,7 @@ def mostrar_mensaje_malo():
         pantalla.blit(render, (100, 200 + i*60))
     pygame.display.flip()
 
-def mostrar_mensaje_malo_y_cambiar():
+async def mostrar_mensaje_malo_y_cambiar():
     fuente_path = os.path.join(FUENTES_PATH, "PressStart2P-Regular.ttf")
     font = fuente_ajustada("ERES MUY MALO", fuente_path, int(ANCHO_BASE * 0.9), int(80 * FACTOR_ESCALA), tamaño_inicial=int(60 * FACTOR_ESCALA))
     font_small = fuente_ajustada("Pulsa ENTER para continuar", fuente_path, int(ANCHO_BASE * 0.8), int(40 * FACTOR_ESCALA), tamaño_inicial=int(28 * FACTOR_ESCALA))
@@ -493,8 +493,7 @@ def mostrar_mensaje_malo_y_cambiar():
     while esperando:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
-                pygame.quit()
-                sys.exit()
+                return
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_RETURN:
                     esperando = False
@@ -506,16 +505,13 @@ def mostrar_mensaje_malo_y_cambiar():
         surface_juego.blit(texto2, (ANCHO_BASE // 2 - texto2.get_width() // 2, int(ALTO_BASE * 0.45)))
         surface_juego.blit(texto3, (ANCHO_BASE // 2 - texto3.get_width() // 2, int(ALTO_BASE * 0.55)))
         blit_centrado_letterbox()
-    pygame.quit()
-    spaceinvaders_path = os.path.join(BASE_PATH, "SpaceInvaders", "space-invaders-master", "spaceinvaders.py")
-    subprocess.Popen([sys.executable, spaceinvaders_path])
-    sys.exit()
+        await asyncio.sleep(0)
 # //=================FIN DE FUNCIONES DEL GLITCH=================//
 
 primera_partida = True 
 
 # Mostrar pantalla de game over
-def mostrar_game_over():
+async def mostrar_game_over():
     if primera_partida and vidas <= 0 and score < 0:
         mostrar_mensaje_malo()
     else:
@@ -539,17 +535,17 @@ def mostrar_game_over():
         while esperando:
             for evento in pygame.event.get():
                 if evento.type == pygame.QUIT:
-                    pygame.quit()
-                    exit()
+                    return False
                 if evento.type == pygame.KEYDOWN:
                     if evento.key == pygame.K_r:
                         return True
                     elif evento.key == pygame.K_ESCAPE:
                         return False
+            await asyncio.sleep(0)
         return False
 
 
-def mostrar_game_over_y_guardar(puntos):
+async def mostrar_game_over_y_guardar(puntos):
     fuente_path = os.path.join(FUENTES_PATH, "PressStart2P-Regular.ttf")
     font = fuente_ajustada("GAME OVER", fuente_path, int(ANCHO_BASE * 0.9), int(100 * FACTOR_ESCALA), tamaño_inicial=int(60 * FACTOR_ESCALA))
     font_small = fuente_ajustada("Introduce tus iniciales:", fuente_path, int(ANCHO_BASE * 0.8), int(40 * FACTOR_ESCALA), tamaño_inicial=int(32 * FACTOR_ESCALA))
@@ -561,7 +557,7 @@ def mostrar_game_over_y_guardar(puntos):
         tiempo_restante = max(0, int(tiempo_limite - (time.time() - start_time)))
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
-                pygame.quit()
+                return
                 exit()
             if len(iniciales) < 3 and event.type == pygame.KEYDOWN:
                 if event.unicode.isalpha():
@@ -573,6 +569,7 @@ def mostrar_game_over_y_guardar(puntos):
                     terminado = True
         if tiempo_restante == 0 and len(iniciales) < 3:
             terminado = True
+        await asyncio.sleep(0)
         surface_juego.fill(NEGRO)
         texto = font.render("GAME OVER", True, ROJO)
         surface_juego.blit(texto, (ANCHO_BASE // 2 - texto.get_width() // 2, int(ALTO_BASE * 0.13)))
@@ -597,10 +594,10 @@ def mostrar_game_over_y_guardar(puntos):
         puntuaciones = sorted(puntuaciones, key=lambda x: x["puntos"], reverse=True)[:10] # Mantener solo las 10 mejores puntuaciones
         with open(ruta_json, "w", encoding="utf-8") as f:
             json.dump(puntuaciones, f, indent=2)
-    mostrar_pantalla_puntuaciones()
+    await mostrar_pantalla_puntuaciones()
 
 
-def mostrar_pantalla_puntuaciones():
+async def mostrar_pantalla_puntuaciones():
     fuente_path = os.path.join(FUENTES_PATH, "PressStart2P-Regular.ttf")
     font = fuente_ajustada("PUNTUACIONES", fuente_path, int(ANCHO_BASE * 0.9), int(100 * FACTOR_ESCALA), tamaño_inicial=int(60 * FACTOR_ESCALA))
     font_small = fuente_ajustada("AAA   999999", fuente_path, int(ANCHO_BASE * 0.7), int(40 * FACTOR_ESCALA), tamaño_inicial=int(32 * FACTOR_ESCALA))
@@ -616,12 +613,10 @@ def mostrar_pantalla_puntuaciones():
     while esperando:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
-                pygame.quit()
-                exit()
+                return
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_ESCAPE:
-                    pygame.quit()
-                    exit()
+                    return
                 if event.key == pygame.K_RETURN:
                     esperando = False
         surface_juego.fill(NEGRO)
@@ -639,6 +634,7 @@ def mostrar_pantalla_puntuaciones():
         instrucciones = font_instrucciones.render(instrucciones_texto, True, ROJO)
         surface_juego.blit(instrucciones, (ANCHO_BASE // 2 - instrucciones.get_width() // 2, int(ALTO_BASE * 0.88)))
         blit_centrado_letterbox()
+        await asyncio.sleep(0)
 
 # Función para crear una explosión
 def crear_explosion(x, y, tamaño=100):
@@ -723,7 +719,7 @@ def cambiar_mundo():
     
 
 
-def mostrar_pantalla_pausa(mensaje):
+async def mostrar_pantalla_pausa(mensaje):
     fuente_path = os.path.join(FUENTES_PATH, "PressStart2P-Regular.ttf")
     font = fuente_ajustada(mensaje, fuente_path, ANCHO_BASE - 40)
     surface_juego.fill(NEGRO)
@@ -737,8 +733,7 @@ def mostrar_pantalla_pausa(mensaje):
     while esperando:
         for evento in pygame.event.get():
             if evento.type == pygame.QUIT:
-                pygame.quit()
-                exit()
+                return False
             if evento.type == pygame.KEYDOWN:
                 if evento.key == pygame.K_y or evento.key == pygame.K_RETURN:
                     esperando = False
@@ -747,8 +742,9 @@ def mostrar_pantalla_pausa(mensaje):
                     manejador_musica.reproducir_para_mundo(mundo)
                     cambiar_mundo()
                 elif evento.key == pygame.K_n:
-                    pygame.quit()
-                    exit()
+                    return False
+        await asyncio.sleep(0)
+    return True
 
 def crear_bala(self, x, y, dx, dy, sprite_bala):
     bala = Bala(x, y)
@@ -816,22 +812,24 @@ jugando = True
 # manejador_musica.reproducir(os.path.join(BASE_PATH, "songs", "main.ogg"))
 # mostrar_pantalla_inicio()
 
-# Cuando el jugador pulsa ENTER para empezar:
-manejador_musica.reproducir_para_mundo(1)
-
-# Bucle principal del juego
-
-while True:
-    manejador_musica.reproducir(os.path.join(BASE_PATH, "songs", "main.ogg"))
-    reiniciar_juego()
-    jefe = None
-    jefes_derrotados = 0
-    enemigos_abatidos_ocultos = 0
-    tiempo_inicio_nivel = pygame.time.get_ticks()
-    duracion_nivel = 30  # o el valor inicial que uses para el primer mundo
-    actualizar_ventana_y_escala(ANCHO, ALTO)  # <-- Asegura el escalado correcto tras reinicio
-    mostrar_pantalla_inicio()
+async def main():
+    global primera_partida
     manejador_musica.reproducir_para_mundo(1)
+
+    # Bucle principal del juego
+
+    while True:
+        manejador_musica.reproducir(os.path.join(BASE_PATH, "songs", "main.ogg"))
+        reiniciar_juego()
+        global jefe, jefes_derrotados, enemigos_abatidos_ocultos, tiempo_inicio_nivel, duracion_nivel
+        jefe = None
+        jefes_derrotados = 0
+        enemigos_abatidos_ocultos = 0
+        tiempo_inicio_nivel = pygame.time.get_ticks()
+        duracion_nivel = 30  # o el valor inicial que uses para el primer mundo
+        actualizar_ventana_y_escala(ANCHO, ALTO)  # <-- Asegura el escalado correcto tras reinicio
+        await mostrar_pantalla_inicio()
+        manejador_musica.reproducir_para_mundo(1)
 
     jugando = True
     tiempo_pasado = 0
@@ -854,14 +852,15 @@ while True:
                     while en_pausa:
                         for ev in pygame.event.get():
                             if ev.type == pygame.QUIT:
-                                pygame.quit()
-                                exit()
+                                juego_en_progreso = False
+                                en_pausa = False
                             if ev.type == pygame.KEYDOWN:
                                 if ev.key == pygame.K_p:
                                     en_pausa = False
                                 if ev.key == pygame.K_ESCAPE:
-                                    pygame.quit()
-                                    exit()
+                                    juego_en_progreso = False
+                                    en_pausa = False
+                        await asyncio.sleep(0)
                 if evento.key == pygame.K_m:
                     # Alternar mute de música
                     musica_muted = not musica_muted
@@ -1025,7 +1024,7 @@ while True:
             # Comprobar colisiones con enemigos
             for enemigo in enemigos:
                 if bala.rect.colliderect(enemigo.rect):
-                    # --- MODIFICADOR POR AURA DE FUEGO ---
+                    # --- MODIFICADOR POR AURA DE FUEGO --- OBSOLETO ---
                     if isinstance(enemigo, NaveNaranja):
                         enemigo.otorgar_modificador(nave, modificadores_activos, burbuja_escudo_img)
                         if modificadores_activos:
@@ -1054,7 +1053,7 @@ while True:
                     crear_explosion(jefe.rect.centerx, jefe.rect.centery, 200)  # Explosión más grande para el jefe
                     jefe = None
                     balas_enemigas.clear()
-                    mostrar_pantalla_pausa("YOU WIN!")
+                    await mostrar_pantalla_pausa("YOU WIN!")
                     break
                 if bala in balas:
                     balas.remove(bala)
@@ -1177,16 +1176,18 @@ while True:
 
         # Mostrar el surface_juego escalado y centrado (letterbox)
         blit_centrado_letterbox()
+        await asyncio.sleep(0)
 
         # Salir del bucle de juego
     if vida <= 0:
         if primera_partida and puntos < 0:
-            mostrar_mensaje_malo_y_cambiar()
+            await mostrar_mensaje_malo_y_cambiar()
         else:
             manejador_musica.reproducir_loose()
-            mostrar_game_over_y_guardar(puntos)
+            await mostrar_game_over_y_guardar(puntos)
         # El bucle while True hará que se reinicie todo el flujo automáticamente
     else:
-        pygame.quit()
         break
     primera_partida = False
+
+asyncio.run(main())
