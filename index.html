@@ -196,126 +196,189 @@ function show_infobox() {
 
     <link rel="icon" type="image/png" href="favicon.png" sizes="16x16">
 
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&family=Share+Tech+Mono&display=swap" rel="stylesheet">
     <style>
-        #status {
-            display: inline-block;
-            vertical-align: top;
-            margin-top: 20px;
-            margin-left: 30px;
-            font-weight: bold;
-            color: rgb(120, 120, 120);
+        * { box-sizing: border-box; }
+
+        body {
+            margin: 0; padding: 0;
+            background: #000814;
+            font-family: 'Share Tech Mono', monospace;
+            overflow: hidden;
         }
 
-        #progress {
-            height: 20px;
-            width: 300px;
-        }
-
+        /* ── PYGBAG REQUIRED ── */
+        #status { display: none; }
+        #progress { display: none; }
         #infobox {
-            position: fixed; /* center relative to viewport */
-            background: green;
-            color: blue;
-            font-weight: bold;
-            padding: 12px 24px;
- /*           display: none; */
+            position: fixed;
+            background: transparent;
+            color: transparent;
+            font-size: 0;
             z-index: 999999;
+            pointer-events: none;
         }
         div.emscripten { text-align: center; }
-        div.emscripten_border { border: 1px solid black; }
-        div.thick_border { border: 4px solid black; }
-
-        /* the canvas *must not* have any border or padding, or mouse coords will be wrong */
-        /* average size of droid screen 470dp x 320dp  */
+        div.emscripten_border { border: 1px solid #0ff2; }
+        div.thick_border { border: 4px solid #0ff4; }
         canvas.emscripten {
             border: 0px none;
             background-color: transparent;
-            width: 100%;
-            height: 100%;
+            width: 100%; height: 100%;
             z-index: 5;
-
-            padding: 0;
-            margin: 0 auto;
-
+            padding: 0; margin: 0 auto;
             position: absolute;
-            top: 0;
-            bottom: 0;
-            left: 0;
-            right: 0;
+            top: 0; bottom: 0; left: 0; right: 0;
         }
+        .topright { position:absolute; top:0; right:0; }
+        .bottomright { position:absolute; top:40%; right:0; }
+        .center { display:flex; align-items:center; justify-content:center; }
+        .trinfo { position:relative; right:0; border:1px solid #0ff3; }
+        .framed { position:relative; top:150px; right:10px; border:1px solid #0ff3; }
 
-        body {
-            font-family: arial;
-            margin: 0;
-            padding: none;
-            background-color:powderblue;
+        /* ── ARCADE LOADER ── */
+        #arcade-loader {
+            position: fixed; inset: 0; z-index: 9000;
+            display: flex; flex-direction: column;
+            align-items: center; justify-content: center;
+            background: #000814; overflow: hidden;
         }
-
-        .topright{
-           position:absolute;
-           top:0px;
-           right:0px;
+        #arcade-loader::before {
+            content: '';
+            position: absolute; inset: 0;
+            background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.18) 2px, rgba(0,0,0,0.18) 4px);
+            pointer-events: none; z-index: 1;
         }
-
-        .bottomright {
-            position:absolute;
-            top: 40%;
-            right: 0px;
+        #stars { position: absolute; inset: 0; overflow: hidden; }
+        .star {
+            position: absolute; background: #fff; border-radius: 50%;
+            animation: twinkle var(--d) ease-in-out infinite alternate;
+            opacity: var(--o);
         }
-
-        .center {
-            display: flex;
-            align-items: center;
-            justify-content: center;
+        @keyframes twinkle {
+            from { opacity: var(--o); transform: scale(1); }
+            to   { opacity: calc(var(--o) * 0.2); transform: scale(0.5); }
         }
-
-        .trinfo{
-           position: relative;
-           right: 0px;
-           border: 1px solid black;
+        #grid-floor {
+            position: absolute; bottom: 0; left: 0; right: 0; height: 45%;
+            background: linear-gradient(to bottom, transparent 0%, rgba(0,240,255,0.04) 100%);
+            perspective: 300px; overflow: hidden;
         }
-
-        .framed{
-           position: relative;
-           top: 150px;
-           right: 10px;
-           border: 1px solid black;
+        #grid-floor::before {
+            content: '';
+            position: absolute; inset: 0;
+            background-image: linear-gradient(rgba(0,240,255,0.25) 1px, transparent 1px), linear-gradient(90deg, rgba(0,240,255,0.25) 1px, transparent 1px);
+            background-size: 60px 60px;
+            transform: rotateX(55deg) scaleY(3) translateY(-40%);
+            animation: gridScroll 3s linear infinite;
         }
-
-        /* Circular Progress styling */
-        .circular-progress-container {
+        @keyframes gridScroll { from { background-position: 0 0; } to { background-position: 0 60px; } }
+        #retro-sun {
+            position: absolute; bottom: 42%; left: 50%; transform: translateX(-50%);
+            width: 180px; height: 90px; border-radius: 90px 90px 0 0;
+            background: linear-gradient(180deg, #ff6b35 0%, #ff0080 60%, #8b00ff 100%);
+            box-shadow: 0 0 60px rgba(255,0,128,0.6), 0 0 120px rgba(139,0,255,0.3);
+            overflow: hidden;
+        }
+        #retro-sun::after {
+            content: '';
+            position: absolute; inset: 0;
+            background: repeating-linear-gradient(180deg, transparent 0px, transparent 6px, rgba(0,0,0,0.55) 6px, rgba(0,0,0,0.55) 10px);
+        }
+        #loader-content { position: relative; z-index: 2; text-align: center; margin-bottom: 20px; }
+        #loader-title {
+            font-family: 'Orbitron', sans-serif;
+            font-size: clamp(13px, 2.8vw, 22px); font-weight: 700;
+            letter-spacing: 0.25em; color: #ff0080; text-transform: uppercase;
+            text-shadow: 0 0 10px #ff0080, 0 0 30px #ff008088;
+            margin-bottom: 6px;
+            animation: titlePulse 2s ease-in-out infinite alternate;
+        }
+        @keyframes titlePulse {
+            from { text-shadow: 0 0 10px #ff0080, 0 0 30px #ff008088; }
+            to   { text-shadow: 0 0 20px #ff0080, 0 0 60px #ff0080bb; }
+        }
+        #loader-subtitle {
+            font-family: 'Orbitron', sans-serif;
+            font-size: clamp(18px, 4.5vw, 38px); font-weight: 900;
+            letter-spacing: 0.18em; color: #00f0ff; text-transform: uppercase;
+            text-shadow: 0 0 12px #00f0ff, 0 0 40px #00f0ff88;
+            margin-bottom: 40px;
+            animation: subtitlePulse 1.8s ease-in-out infinite alternate;
+        }
+        @keyframes subtitlePulse {
+            from { text-shadow: 0 0 12px #00f0ff, 0 0 40px #00f0ff88; }
+            to   { text-shadow: 0 0 24px #00f0ff, 0 0 80px #00f0ffbb; }
+        }
+        #progress-wrap { width: clamp(260px, 55vw, 500px); margin: 0 auto 16px auto; }
+        #progress-label {
+            display: flex; justify-content: space-between; align-items: baseline;
+            margin-bottom: 8px;
+            font-family: 'Share Tech Mono', monospace;
+            font-size: clamp(10px, 1.5vw, 13px);
+            color: #ff0080cc; letter-spacing: 0.12em; text-transform: uppercase;
+        }
+        #progress-bar-outer {
+            width: 100%; height: 18px;
+            border: 1px solid #00f0ff55; background: #000814;
             position: relative;
-            width: 120px;
-            height: 120px;
-            margin: 40px auto 20px auto;
+            box-shadow: 0 0 10px #00f0ff22, inset 0 0 8px #00001a;
         }
-        .circular-progress {
-            transform: rotate(-90deg);
+        #progress-bar-outer::before {
+            content: '';
+            position: absolute; inset: 0;
+            background: repeating-linear-gradient(90deg, transparent, transparent 18px, rgba(0,240,255,0.07) 18px, rgba(0,240,255,0.07) 19px);
         }
-        .circular-progress circle {
-            fill: none;
-            stroke-width: 8px;
+        #progress-bar-fill {
+            height: 100%; width: 0%;
+            background: linear-gradient(90deg, #8b00ff, #ff0080, #00f0ff);
+            box-shadow: 0 0 14px #ff0080, 0 0 28px #00f0ff88;
+            transition: width 0.15s ease-out; position: relative;
         }
-        .circular-progress circle.bg {
-            stroke: rgba(255, 255, 255, 0.15);
+        #progress-bar-fill::after {
+            content: ''; position: absolute; right: 0; top: 0; bottom: 0;
+            width: 4px; background: #fff;
+            box-shadow: 0 0 8px #fff, 0 0 16px #00f0ff;
+            animation: scanHead 0.08s steps(1) infinite;
         }
-        .circular-progress circle.fg {
-            stroke: #00f0ff; /* Glowing cyan */
-            stroke-linecap: round;
-            stroke-dasharray: 339.292; /* 2 * PI * r = 2 * 3.14159 * 54 */
-            stroke-dashoffset: 339.292;
-            transition: stroke-dashoffset 0.1s ease;
-            filter: drop-shadow(0 0 6px rgba(0, 240, 255, 0.8));
+        @keyframes scanHead { 0%{opacity:1} 50%{opacity:0.4} }
+        #progress-pct {
+            margin-top: 12px;
+            font-family: 'Orbitron', sans-serif;
+            font-size: clamp(26px, 5vw, 44px); font-weight: 900;
+            color: #fff; letter-spacing: 0.08em;
+            text-shadow: 0 0 20px #00f0ff, 0 0 40px #00f0ff88;
         }
-        .progress-text {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            font-size: 22px;
-            font-weight: bold;
-            color: #ffffff;
-            font-family: sans-serif;
-            text-shadow: 0 0 4px rgba(0, 0, 0, 0.5);
+        #progress-msg {
+            margin-top: 8px;
+            font-family: 'Share Tech Mono', monospace;
+            font-size: clamp(9px, 1.4vw, 12px);
+            color: #00f0ffaa; letter-spacing: 0.2em; text-transform: uppercase;
+            min-height: 1.4em;
+        }
+        #blink-cursor { display:inline-block; animation: blink 0.7s steps(1) infinite; color:#ff0080; }
+        @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0} }
+        .corner { position:absolute; width:20px; height:20px; z-index:3; }
+        .corner-tl { top:16px; left:16px; border-top:2px solid #ff0080; border-left:2px solid #ff0080; }
+        .corner-tr { top:16px; right:16px; border-top:2px solid #ff0080; border-right:2px solid #ff0080; }
+        .corner-bl { bottom:16px; left:16px; border-bottom:2px solid #ff0080; border-left:2px solid #ff0080; }
+        .corner-br { bottom:16px; right:16px; border-bottom:2px solid #ff0080; border-right:2px solid #ff0080; }
+
+        /* Click to start overlay */
+        #click-to-start {
+            display: none;
+            position: fixed; inset: 0; z-index: 8999;
+            align-items: center; justify-content: center;
+            background: rgba(0,8,20,0.85);
+            flex-direction: column; gap: 20px;
+        }
+        #click-to-start.visible { display: flex; }
+        #click-to-start p {
+            font-family: 'Orbitron', sans-serif;
+            font-size: clamp(18px, 4vw, 32px); font-weight: 900;
+            color: #00f0ff; letter-spacing: 0.2em; text-transform: uppercase;
+            text-shadow: 0 0 20px #00f0ff;
+            animation: subtitlePulse 1s ease-in-out infinite alternate;
         }
     </style>
 
@@ -334,18 +397,41 @@ function show_infobox() {
 
 <body>
 
-    <div id="transfer" align=center>
-        <div class="circular-progress-container">
-            <svg class="circular-progress" width="120" height="120" viewBox="0 0 120 120">
-                <circle class="bg" cx="60" cy="60" r="54" />
-                <circle class="fg" cx="60" cy="60" r="54" />
-            </svg>
-            <div class="progress-text" id="progress-percent">0%</div>
+    <!-- Hidden pygbag internals -->
+    <div id="transfer" style="display:none">
+        <div id="status">Downloading...</div>
+        <progress value="0" max="100" id="progress"></progress>
+    </div>
+
+    <!-- ARCADE LOADER -->
+    <div id="arcade-loader">
+        <div id="stars"></div>
+        <div id="grid-floor"></div>
+        <div id="retro-sun"></div>
+        <div class="corner corner-tl"></div>
+        <div class="corner corner-tr"></div>
+        <div class="corner corner-bl"></div>
+        <div class="corner corner-br"></div>
+        <div id="loader-content">
+            <div id="loader-title">— Sistema de arranque —</div>
+            <div id="loader-subtitle">Tu nave se está<br>ensamblando</div>
+            <div id="progress-wrap">
+                <div id="progress-label">
+                    <span>CARGANDO MÓDULOS</span>
+                    <span id="progress-part-label">PARTE 1 / 4</span>
+                </div>
+                <div id="progress-bar-outer">
+                    <div id="progress-bar-fill"></div>
+                </div>
+            </div>
+            <div id="progress-pct">0%</div>
+            <div id="progress-msg">INICIALIZANDO SISTEMAS<span id="blink-cursor">_</span></div>
         </div>
-        <div class="emscripten" id="status" style="font-family: sans-serif; color: #fff; margin-top: 10px; font-weight: 500;">Downloading...</div>
-        <div class="emscripten" style="display: none;">
-            <progress value="0" max="100" id="progress"></progress>
-        </div>
+    </div>
+
+    <!-- Click to start -->
+    <div id="click-to-start">
+        <p>— CLICK PARA INICIAR —</p>
     </div>
 
 
@@ -362,7 +448,7 @@ height="720px"
     oncontextmenu="event.preventDefault()" tabindex=1 hidden>
     </canvas>
 
-    <div id="infobox">Loading, please wait ...</div>
+    <div id="infobox">Loading...</div>
 
     <div id=html></div>
 
@@ -482,50 +568,87 @@ frameborder="1"
         window.frames["iframe"].location = url;
     }
 
-    // Circular progress updater loop
+    // ── STAR FIELD ──
+    (function() {
+        const container = document.getElementById('stars');
+        for (let i = 0; i < 120; i++) {
+            const s = document.createElement('div');
+            s.className = 'star';
+            const size = Math.random() * 2.5 + 0.5;
+            const o = (Math.random() * 0.5 + 0.2).toFixed(2);
+            const d = (Math.random() * 3 + 1.5).toFixed(1) + 's';
+            s.style.cssText = `width:${size}px;height:${size}px;left:${Math.random()*100}%;top:${Math.random()*60}%;--o:${o};--d:${d};animation-delay:${(Math.random()*3).toFixed(1)}s;`;
+            container.appendChild(s);
+        }
+    })();
+
+    const PART_MSGS = [
+        'CARGANDO NÚCLEO DE PROPULSIÓN',
+        'ENSAMBLANDO ESCUDOS DEFLECTORES',
+        'CALIBRANDO SISTEMAS DE ARMAS',
+        'ACTIVANDO INTELIGENCIA DE VUELO',
+        'NAVE LISTA PARA EL DESPEGUE'
+    ];
+
+    let loaderDone = false;
+
     setInterval(() => {
         const progressEl = document.getElementById('progress');
-        const percentText = document.getElementById('progress-percent');
-        const fgCircle = document.querySelector('.circular-progress circle.fg');
-        const statusEl = document.getElementById('status');
-        
-        if (progressEl && percentText && fgCircle) {
-            let value = parseFloat(progressEl.value);
-            let max = parseFloat(progressEl.max) || 100;
-            if (isNaN(value) || value < 0) value = 0;
-            
-            // Calculate part percentage (0 to 100)
-            let partPercentage = (value / max) * 100;
-            if (partPercentage > 100) partPercentage = 100;
-            
-            // Calculate cumulative global percentage across 4 parts
-            let currentPart = window.currentLoadingPart || 1;
-            let globalPercentage = 0;
-            
-            if (currentPart >= 1 && currentPart <= 4) {
-                // Each part counts for 25% of the total download
-                globalPercentage = Math.round(((currentPart - 1) * 25) + (partPercentage * 0.25));
-            } else {
-                // If loading completed or in another state
-                globalPercentage = 100;
-            }
-            
-            if (globalPercentage > 100) globalPercentage = 100;
-            
-            // Update percentage text
-            percentText.innerText = globalPercentage + '%';
-            
-            // Update circle dashoffset (Circumference = 339.292)
-            const circumference = 339.292;
-            const offset = circumference - (globalPercentage / 100) * circumference;
-            fgCircle.style.strokeDashoffset = offset;
-            
-            // Add loading feedback to status text
-            if (statusEl && currentPart <= 4) {
-                statusEl.innerText = `Descargando recursos (Parte ${currentPart} de 4)...`;
+        if (!progressEl) return;
+
+        let value = parseFloat(progressEl.value) || 0;
+        let max   = parseFloat(progressEl.max)   || 100;
+        let partPercentage = Math.min((value / max) * 100, 100);
+        let currentPart = window.currentLoadingPart || 1;
+        let globalPct = 0;
+
+        if (currentPart >= 1 && currentPart <= 4) {
+            globalPct = Math.round(((currentPart - 1) * 25) + (partPercentage * 0.25));
+        } else {
+            globalPct = 100;
+        }
+        globalPct = Math.min(globalPct, 100);
+
+        const fill = document.getElementById('progress-bar-fill');
+        const pct  = document.getElementById('progress-pct');
+        const msg  = document.getElementById('progress-msg');
+        const part = document.getElementById('progress-part-label');
+
+        if (fill) fill.style.width = globalPct + '%';
+        if (pct)  pct.textContent = globalPct + '%';
+        if (part && currentPart <= 4) part.textContent = `PARTE ${currentPart} / 4`;
+        if (msg) {
+            const idx = Math.min((currentPart || 1) - 1, PART_MSGS.length - 1);
+            msg.innerHTML = PART_MSGS[idx] + '<span id="blink-cursor">_</span>';
+        }
+
+        if (globalPct >= 100 && !loaderDone) {
+            loaderDone = true;
+            // Show click-to-start
+            const loader = document.getElementById('arcade-loader');
+            const clickStart = document.getElementById('click-to-start');
+            if (loader) {
+                loader.style.transition = 'opacity 0.6s ease';
+                loader.style.opacity = '0';
+                setTimeout(() => {
+                    loader.style.display = 'none';
+                    if (clickStart) clickStart.classList.add('visible');
+                }, 650);
             }
         }
     }, 50);
+
+    // Hide click-to-start on first interaction
+    document.addEventListener('click', function hideStart() {
+        const el = document.getElementById('click-to-start');
+        if (el) el.style.display = 'none';
+        document.removeEventListener('click', hideStart);
+    });
+    document.addEventListener('keydown', function hideStartKey() {
+        const el = document.getElementById('click-to-start');
+        if (el) el.style.display = 'none';
+        document.removeEventListener('keydown', hideStartKey);
+    });
 
     </script>
 
