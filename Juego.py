@@ -1187,7 +1187,7 @@ async def main():
             await mostrar_game_over_y_guardar(puntos)
         # El bucle while True hará que se reinicie todo el flujo automáticamente
     else:
-        break
+        pass
     primera_partida = False
 
 asyncio.run(main())
