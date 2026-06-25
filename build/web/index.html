@@ -1,14 +1,14 @@
 <html lang="en-us"><script src="https://pygame-web.github.io/cdn/0.9.3/pythons.js" type=module id="site" data-python="python3.12" data-LINES=42 data-COLUMNS=132 data-os="vtx,snd,gui" async defer>#<!--
 
 print("""
-Loading version.web from version.web.apk
+Loading pixel-invaders-web from pixel-invaders-web.apk
     Pygbag Version : 0.9.3
     Template Version : 0.9.3
     Python  : 3.12
     CDN URL : https://pygame-web.github.io/cdn/0.9.3/
     Screen  : 1280x720
-    Title   : version.web
-    Folder  : version.web
+    Title   : pixel-invaders-web
+    Folder  : pixel-invaders-web
     Authors : pgw
     SPDX-License-Identifier: cookiecutter.spdx
 
@@ -29,32 +29,25 @@ async def custom_site():
     platform.window.canvas.style.visibility = "visible"
 
 
-    bundle = "version.web"
+    bundle = "pixel-invaders-web"
 
     # the C or js loader could do that but be explicit.
-    appdir = Path(f"/data/data/{bundle}") # /data/data/version.web
+    appdir = Path(f"/data/data/{bundle}") # /data/data/pixel-invaders-web
     appdir.mkdir()
 
 
     # unpack filesystem from compressed archive into work dir
     if platform.window.location.host.find('.itch.zone')>0:
         import zipfile
-        async with platform.fopen("version.web.apk", "rb") as archive:
+        async with platform.fopen("pixel-invaders-web.apk", "rb") as archive:
             with zipfile.ZipFile(archive) as zip_ref:
                 zip_ref.extractall(appdir.as_posix())
     else:
         import tarfile
-        import io
-        chunks = []
-        for i in range(1, 5):
-            platform.window.currentLoadingPart = i
-            async with platform.fopen(f"version.web.00{i}.data", "rb") as part:
-                chunks.append(part.read())
-        platform.window.currentLoadingPart = 5
-        fileobj = io.BytesIO(b"".join(chunks))
-        tar = tarfile.open(fileobj=fileobj, mode="r:gz")
-        tar.extractall(path=appdir.as_posix(), filter='tar')
-        tar.close()
+        async with platform.fopen("pixel-invaders-web.tar.gz", "rb") as archive:
+            tar = tarfile.open(fileobj=archive, mode="r:gz")
+            tar.extractall(path=appdir.as_posix(), filter='tar')
+            tar.close()
 
     # preloader will change to work dir and prepend it to sys.path
     platform.run_main(PyConfig, loaderhome= appdir / "assets", loadermain=None)
@@ -158,7 +151,7 @@ config = {
     gui_divider : 2,
     ume_block : 1,
     can_close : 0,
-    archive : "version.web",
+    archive : "pixel-invaders-web",
     gui_debug : 2,
     cdn : "https://pygame-web.github.io/cdn/0.9.3/",
     autorun : 0,
@@ -185,7 +178,7 @@ function show_infobox() {
 
 </script>
 
-    <title>version.web</title>
+    <title>pixel-invaders-web</title>
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -280,43 +273,6 @@ function show_infobox() {
            right: 10px;
            border: 1px solid black;
         }
-
-        /* Circular Progress styling */
-        .circular-progress-container {
-            position: relative;
-            width: 120px;
-            height: 120px;
-            margin: 40px auto 20px auto;
-        }
-        .circular-progress {
-            transform: rotate(-90deg);
-        }
-        .circular-progress circle {
-            fill: none;
-            stroke-width: 8px;
-        }
-        .circular-progress circle.bg {
-            stroke: rgba(255, 255, 255, 0.15);
-        }
-        .circular-progress circle.fg {
-            stroke: #00f0ff; /* Glowing cyan */
-            stroke-linecap: round;
-            stroke-dasharray: 339.292; /* 2 * PI * r = 2 * 3.14159 * 54 */
-            stroke-dashoffset: 339.292;
-            transition: stroke-dashoffset 0.1s ease;
-            filter: drop-shadow(0 0 6px rgba(0, 240, 255, 0.8));
-        }
-        .progress-text {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            font-size: 22px;
-            font-weight: bold;
-            color: #ffffff;
-            font-family: sans-serif;
-            text-shadow: 0 0 4px rgba(0, 0, 0, 0.5);
-        }
     </style>
 
     <script>
@@ -328,22 +284,16 @@ function show_infobox() {
 */
     </script>
 
-    <script src="browserfs.min.js"></script>
+    <script src="https://pygame-web.github.io/cdn/0.9.3//browserfs.min.js"></script>
 
 </head>
 
 <body>
 
     <div id="transfer" align=center>
-        <div class="circular-progress-container">
-            <svg class="circular-progress" width="120" height="120" viewBox="0 0 120 120">
-                <circle class="bg" cx="60" cy="60" r="54" />
-                <circle class="fg" cx="60" cy="60" r="54" />
-            </svg>
-            <div class="progress-text" id="progress-percent">0%</div>
-        </div>
-        <div class="emscripten" id="status" style="font-family: sans-serif; color: #fff; margin-top: 10px; font-weight: 500;">Downloading...</div>
-        <div class="emscripten" style="display: none;">
+<!--        <div class="spinner" id='spinner'></div> -->
+        <div class="emscripten" id="status">Downloading...</div>
+        <div class="emscripten">
             <progress value="0" max="100" id="progress"></progress>
         </div>
     </div>
@@ -481,51 +431,6 @@ frameborder="1"
     function frame_online(url) {
         window.frames["iframe"].location = url;
     }
-
-    // Circular progress updater loop
-    setInterval(() => {
-        const progressEl = document.getElementById('progress');
-        const percentText = document.getElementById('progress-percent');
-        const fgCircle = document.querySelector('.circular-progress circle.fg');
-        const statusEl = document.getElementById('status');
-        
-        if (progressEl && percentText && fgCircle) {
-            let value = parseFloat(progressEl.value);
-            let max = parseFloat(progressEl.max) || 100;
-            if (isNaN(value) || value < 0) value = 0;
-            
-            // Calculate part percentage (0 to 100)
-            let partPercentage = (value / max) * 100;
-            if (partPercentage > 100) partPercentage = 100;
-            
-            // Calculate cumulative global percentage across 4 parts
-            let currentPart = window.currentLoadingPart || 1;
-            let globalPercentage = 0;
-            
-            if (currentPart >= 1 && currentPart <= 4) {
-                // Each part counts for 25% of the total download
-                globalPercentage = Math.round(((currentPart - 1) * 25) + (partPercentage * 0.25));
-            } else {
-                // If loading completed or in another state
-                globalPercentage = 100;
-            }
-            
-            if (globalPercentage > 100) globalPercentage = 100;
-            
-            // Update percentage text
-            percentText.innerText = globalPercentage + '%';
-            
-            // Update circle dashoffset (Circumference = 339.292)
-            const circumference = 339.292;
-            const offset = circumference - (globalPercentage / 100) * circumference;
-            fgCircle.style.strokeDashoffset = offset;
-            
-            // Add loading feedback to status text
-            if (statusEl && currentPart <= 4) {
-                statusEl.innerText = `Descargando recursos (Parte ${currentPart} de 4)...`;
-            }
-        }
-    }, 50);
 
     </script>
 
