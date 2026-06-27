@@ -814,10 +814,8 @@ jugando = True
 
 async def main():
     global primera_partida
-    manejador_musica.reproducir_para_mundo(1)
 
     # Bucle principal del juego
-
     while True:
         manejador_musica.reproducir(os.path.join(BASE_PATH, "songs", "main.ogg"))
         reiniciar_juego()
@@ -831,363 +829,361 @@ async def main():
         await mostrar_pantalla_inicio()
         manejador_musica.reproducir_para_mundo(1)
 
-    jugando = True
-    tiempo_pasado = 0
-    juego_en_progreso = True
-    en_pausa = False
-    while juego_en_progreso and vida > 0:
-        tiempo_pasado += reloj.tick(FPS)
-        # Gestión de eventos
-        for evento in pygame.event.get():
-            if evento.type == pygame.QUIT:
-                jugando = False
-                juego_en_progreso = False
-            if evento.type == pygame.KEYDOWN:
-                if evento.key == pygame.K_ESCAPE:
+        tiempo_pasado = 0
+        juego_en_progreso = True
+        en_pausa = False
+        while juego_en_progreso and vida > 0:
+            tiempo_pasado += reloj.tick(FPS)
+            # Gestión de eventos
+            for evento in pygame.event.get():
+                if evento.type == pygame.QUIT:
                     jugando = False
                     juego_en_progreso = False
-                if evento.key == pygame.K_p:
-                    en_pausa = True
-                    mostrar_overlay_pausa()
-                    while en_pausa:
-                        for ev in pygame.event.get():
-                            if ev.type == pygame.QUIT:
-                                juego_en_progreso = False
-                                en_pausa = False
-                            if ev.type == pygame.KEYDOWN:
-                                if ev.key == pygame.K_p:
-                                    en_pausa = False
-                                if ev.key == pygame.K_ESCAPE:
+                if evento.type == pygame.KEYDOWN:
+                    if evento.key == pygame.K_ESCAPE:
+                        jugando = False
+                        juego_en_progreso = False
+                    if evento.key == pygame.K_p:
+                        en_pausa = True
+                        mostrar_overlay_pausa()
+                        while en_pausa:
+                            for ev in pygame.event.get():
+                                if ev.type == pygame.QUIT:
                                     juego_en_progreso = False
                                     en_pausa = False
-                        await asyncio.sleep(0)
-                if evento.key == pygame.K_m:
-                    # Alternar mute de música
-                    musica_muted = not musica_muted
-                    if musica_muted:
-                        pygame.mixer.music.set_volume(0)
-                    else:
-                        pygame.mixer.music.set_volume(0.7)
-            if evento.type == pygame.VIDEORESIZE:
-                actualizar_ventana_y_escala(evento.w, evento.h)
-        teclas = pygame.key.get_pressed()
-        gestionar_teclas(teclas)
+                                if ev.type == pygame.KEYDOWN:
+                                    if ev.key == pygame.K_p:
+                                        en_pausa = False
+                                    if ev.key == pygame.K_ESCAPE:
+                                        juego_en_progreso = False
+                                        en_pausa = False
+                            await asyncio.sleep(0)
+                    if evento.key == pygame.K_m:
+                        # Alternar mute de música
+                        global musica_muted
+                        musica_muted = not musica_muted
+                        if musica_muted:
+                            pygame.mixer.music.set_volume(0)
+                        else:
+                            pygame.mixer.music.set_volume(0.7)
+                if evento.type == pygame.VIDEORESIZE:
+                    actualizar_ventana_y_escala(evento.w, evento.h)
+            teclas = pygame.key.get_pressed()
+            gestionar_teclas(teclas)
 
-        # --- GENERACIÓN DE ENEMIGOS Y JEFES  ---
-        
-        
-        # PARA LOS ENEMIGOS
-        if tiempo_pasado > tiempo_entre_enemigos and len(enemigos) < max_enemigos_en_pantalla:
-            r = random.uniform(0, MAX_PROB)
-            # Generar enemigos especiales con probabilidades
-            
-            if r < prob_nave_roja:  # Probabilidad de nave roja
-                nave_roja = NaveRoja(ANCHO_BASE, ALTO_BASE)
-                nave_roja.sprite = sprite_nave_roja
-                nave_roja.tiempo_entre_disparos = tiempo_disparo_nave_especial
-                enemigos.append(nave_roja)
-            elif r < prob_nave_roja + prob_nave_verde: # Probabilidad de nave verde
-                nave_verde = NaveVerde(random.randint(0, ANCHO_BASE - 75), 0)
-                nave_verde.sprite = sprite_nave_verde
-                nave_verde.tiempo_entre_disparos = tiempo_disparo_nave_especial
-                enemigos.append(nave_verde)
-            elif r < prob_nave_roja + prob_nave_verde + prob_nave_amarilla: # Probabilidad de nave amarilla
-                y_inicial = 0
-                x_inicial = random.randint(100, ANCHO_BASE - 250)
-                for i in range(6):
-                    nave_amarilla = NaveAmarilla(x_inicial + i*75, y_inicial)
-                    nave_amarilla.sprite = sprite_nave_amarilla
-                    nave_amarilla.tiempo_entre_disparos = tiempo_disparo_nave_especial
-                    enemigos.append(nave_amarilla)
-            elif r < prob_nave_roja + prob_nave_verde + prob_nave_amarilla + prob_nave_naranja: # Probabilidad de nave naranja
-                x = random.randint(0, ANCHO_BASE - 75)
-                y = -100
-                nave_naranja = NaveNaranja(x, y, ANCHO_BASE, ALTO_BASE)
-                nave_naranja.sprite = sprite_nave_naranja
-                nave_naranja.redimensionar(FACTOR_ESCALA, sprite_nave_naranja)
-                enemigos.append(nave_naranja)
-            else:
-                # Siempre generar nave normal si no se seleccionó ninguna especial
-                x = random.randint(0, ANCHO_BASE - 75)
-                y = -100
-                enemigo = Enemigo(x, y)
-                enemigo.sprite = sprite_enemigo
-                enemigos.append(enemigo)
-            tiempo_pasado = 0
-        
-        
-        # --- GESTIÓN DEL JEFE Y NIVELES ---
-        
-        # Calcula dificultad del jefe según el mundo
-        velocidad_jefe = min(3 + (mundo - 1), 20)
-        tiempo_entre_disparos_jefe = max(1200 - (mundo - 1) * 150, 300)
+            # --- GENERACIÓN DE ENEMIGOS Y JEFES  ---
 
-        # SOLO ESTA CONDICIÓN PARA APARICIÓN DEL JEFE
-        if enemigos_abatidos >= enemigos_por_jefe and not jefe:
-            jefe = Jefe(ANCHO_BASE // 2, 50, ANCHO_BASE, vida_base_jefe, velocidad=velocidad_jefe, tiempo_entre_disparos=tiempo_entre_disparos_jefe)
-            jefe.sprite = sprite_jefe
-            if mundo >= 3:
-                jefe.escudo = Escudo(jefe, burbuja_escudo_img, duracion=20)
-            else:
-                jefe.escudo = None
+
+            # PARA LOS ENEMIGOS
+            if tiempo_pasado > tiempo_entre_enemigos and len(enemigos) < max_enemigos_en_pantalla:
+                r = random.uniform(0, MAX_PROB)
+                # Generar enemigos especiales con probabilidades
+
+                if r < prob_nave_roja:  # Probabilidad de nave roja
+                    nave_roja = NaveRoja(ANCHO_BASE, ALTO_BASE)
+                    nave_roja.sprite = sprite_nave_roja
+                    nave_roja.tiempo_entre_disparos = tiempo_disparo_nave_especial
+                    enemigos.append(nave_roja)
+                elif r < prob_nave_roja + prob_nave_verde: # Probabilidad de nave verde
+                    nave_verde = NaveVerde(random.randint(0, ANCHO_BASE - 75), 0)
+                    nave_verde.sprite = sprite_nave_verde
+                    nave_verde.tiempo_entre_disparos = tiempo_disparo_nave_especial
+                    enemigos.append(nave_verde)
+                elif r < prob_nave_roja + prob_nave_verde + prob_nave_amarilla: # Probabilidad de nave amarilla
+                    y_inicial = 0
+                    x_inicial = random.randint(100, ANCHO_BASE - 250)
+                    for i in range(6):
+                        nave_amarilla = NaveAmarilla(x_inicial + i*75, y_inicial)
+                        nave_amarilla.sprite = sprite_nave_amarilla
+                        nave_amarilla.tiempo_entre_disparos = tiempo_disparo_nave_especial
+                        enemigos.append(nave_amarilla)
+                elif r < prob_nave_roja + prob_nave_verde + prob_nave_amarilla + prob_nave_naranja: # Probabilidad de nave naranja
+                    x = random.randint(0, ANCHO_BASE - 75)
+                    y = -100
+                    nave_naranja = NaveNaranja(x, y, ANCHO_BASE, ALTO_BASE)
+                    nave_naranja.sprite = sprite_nave_naranja
+                    nave_naranja.redimensionar(FACTOR_ESCALA, sprite_nave_naranja)
+                    enemigos.append(nave_naranja)
+                else:
+                    # Siempre generar nave normal si no se seleccionó ninguna especial
+                    x = random.randint(0, ANCHO_BASE - 75)
+                    y = -100
+                    enemigo = Enemigo(x, y)
+                    enemigo.sprite = sprite_enemigo
+                    enemigos.append(enemigo)
+                tiempo_pasado = 0
+
+
+            # --- GESTIÓN DEL JEFE Y NIVELES ---
+
+            # Calcula dificultad del jefe según el mundo
+            velocidad_jefe = min(3 + (mundo - 1), 20)
+            tiempo_entre_disparos_jefe = max(1200 - (mundo - 1) * 150, 300)
+
+            # SOLO ESTA CONDICIÓN PARA APARICIÓN DEL JEFE
+            if enemigos_abatidos >= enemigos_por_jefe and not jefe:
+                jefe = Jefe(ANCHO_BASE // 2, 50, ANCHO_BASE, vida_base_jefe, velocidad=velocidad_jefe, tiempo_entre_disparos=tiempo_entre_disparos_jefe)
+                jefe.sprite = sprite_jefe
+                if mundo >= 3:
+                    jefe.escudo = Escudo(jefe, burbuja_escudo_img, duracion=20)
+                else:
+                    jefe.escudo = None
+                for enemigo in enemigos:
+                    enemigo.pausado = True
+                enemigos = []
+                # Si quieres que solo haya un jefe por mundo, puedes reiniciar enemigos_abatidos aquí si lo necesitas
+
+            # --- RENDERIZADO EN surface_juego ---
+            surface_juego.fill(fondo_color)
+            fondo_animado.actualizar(velocidad_mundo=mundo)
+            fondo_animado.dibujar(surface_juego)
+            # Actualizar y dibujar al jefe si existe
+            if jefe:
+                jefe.movimiento()
+                jefe.disparar(balas_enemigas)
+                # Asignar sprite a las balas enemigas recién creadas
+                for bala_enemiga in balas_enemigas:
+                    if not hasattr(bala_enemiga, 'sprite') or bala_enemiga.sprite is None:
+                        bala_enemiga.sprite = sprite_bala_enemiga
+                jefe.dibujar(surface_juego)
+                if hasattr(jefe, 'escudo') and jefe.escudo and jefe.escudo.activo:
+                    jefe.escudo.dibujar(surface_juego)
+
+            # Actualizar enemigos y balas
+            enemigos_a_eliminar = []
             for enemigo in enemigos:
-                enemigo.pausado = True
-            enemigos = []
-            # Si quieres que solo haya un jefe por mundo, puedes reiniciar enemigos_abatidos aquí si lo necesitas
-
-        # --- RENDERIZADO EN surface_juego ---
-        surface_juego.fill(fondo_color)
-        fondo_animado.actualizar(velocidad_mundo=mundo)
-        fondo_animado.dibujar(surface_juego)
-        # Actualizar y dibujar al jefe si existe
-        if jefe:
-            jefe.movimiento()
-            jefe.disparar(balas_enemigas)
-            # Asignar sprite a las balas enemigas recién creadas
-            for bala_enemiga in balas_enemigas:
-                if not hasattr(bala_enemiga, 'sprite') or bala_enemiga.sprite is None:
-                    bala_enemiga.sprite = sprite_bala_enemiga
-            jefe.dibujar(surface_juego)
-            if hasattr(jefe, 'escudo') and jefe.escudo and jefe.escudo.activo:
-                jefe.escudo.dibujar(surface_juego)
-
-        # Actualizar enemigos y balas
-        enemigos_a_eliminar = []
-        for enemigo in enemigos:
-            if not enemigo.pausado:
-                enemigo.movimiento()
-                if isinstance(enemigo, NaveVerde):
-                    enemigo.disparar(balas_enemigas)
-                if isinstance(enemigo, NaveRoja):
-                    enemigo.disparar(balas_enemigas)
-                if isinstance(enemigo, NaveAmarilla):
-                    enemigo.disparar(balas_enemigas, nave)
-                if isinstance(enemigo, NaveNaranja):
-                    pass  # Ya no se otorga modificador ni mensaje aquí
-                if enemigo.rect.top > ALTO:
-                    puntos -= 50
-                    enemigos_a_eliminar.append(enemigo)
-                    continue
-            enemigo.dibujar(surface_juego)
-            if nave.rect.colliderect(enemigo.rect):
-                escudo_activado = False
-                for mod in modificadores_activos:
-                    if isinstance(mod, Escudo) and mod.activo:
-                        mod.recibir_golpe()
-                        escudo_activado = True
-                        break
-                if not escudo_activado:
-                    vida -= 1
-                    modificadores_activos = [mod for mod in modificadores_activos if not (isinstance(mod, DisparoTriple) and mod.activo)]
-                enemigos_a_eliminar.append(enemigo)
-                enemigos_abatidos += 1
-                enemigos_abatidos_ocultos += 1
-                crear_explosion(nave.rect.centerx, nave.rect.centery)
-
-        # Eliminar enemigos y actualizar puntos
-        for enemigo in enemigos_a_eliminar:
-            if enemigo in enemigos:
-                if isinstance(enemigo, NaveRoja):
-                    contador_disparo_triple += 1
-                    if contador_disparo_triple >= 30:
-                        modificadores_activos.append(DisparoTriple(nave))
-                        contador_disparo_triple = 0
-                elif isinstance(enemigo, NaveVerde):
-                    contador_escudo += 1
-                    if contador_escudo >= 30:
-                        modificadores_activos.append(Escudo(nave, burbuja_escudo_img))
-                        contador_escudo = 0
-                elif isinstance(enemigo, NaveAmarilla):
-                    pass  # Sin modificador
-                elif isinstance(enemigo, NaveNaranja):
-                    enemigo.otorgar_modificador(nave, modificadores_activos, burbuja_escudo_img)
-                    # Mostrar mensaje según el tipo
-                    if modificadores_activos:
-                        mod = modificadores_activos[-1]
-                        if isinstance(mod, Escudo):
-                            mostrar_mensaje_modificador("¡Escudo obtenido!", (100, 200, 255))
-                        elif isinstance(mod, DisparoTriple):
-                            mostrar_mensaje_modificador("¡Disparo triple!", (255, 200, 0))
-                enemigos.remove(enemigo)
-                puntos -= 50
-
-        # Actualizar balas
-        balas_a_eliminar = []
-        for bala in balas[:]:  # Hacer una copia de la lista para iterar
-            bala.mover()
-            # Eliminar balas que salgan de la pantalla
-            if bala.rect.bottom < 0:
-                balas_a_eliminar.append(bala)
-                continue
-            
-            bala.dibujar(surface_juego)
-            # Comprobar colisiones con enemigos
-            for enemigo in enemigos:
-                if bala.rect.colliderect(enemigo.rect):
-                    # --- MODIFICADOR POR AURA DE FUEGO --- OBSOLETO ---
+                if not enemigo.pausado:
+                    enemigo.movimiento()
+                    if isinstance(enemigo, NaveVerde):
+                        enemigo.disparar(balas_enemigas)
+                    if isinstance(enemigo, NaveRoja):
+                        enemigo.disparar(balas_enemigas)
+                    if isinstance(enemigo, NaveAmarilla):
+                        enemigo.disparar(balas_enemigas, nave)
                     if isinstance(enemigo, NaveNaranja):
+                        pass  # Ya no se otorga modificador ni mensaje aquí
+                    if enemigo.rect.top > ALTO:
+                        puntos -= 50
+                        enemigos_a_eliminar.append(enemigo)
+                        continue
+                enemigo.dibujar(surface_juego)
+                if nave.rect.colliderect(enemigo.rect):
+                    escudo_activado = False
+                    for mod in modificadores_activos:
+                        if isinstance(mod, Escudo) and mod.activo:
+                            mod.recibir_golpe()
+                            escudo_activado = True
+                            break
+                    if not escudo_activado:
+                        vida -= 1
+                        modificadores_activos = [mod for mod in modificadores_activos if not (isinstance(mod, DisparoTriple) and mod.activo)]
+                    enemigos_a_eliminar.append(enemigo)
+                    enemigos_abatidos += 1
+                    enemigos_abatidos_ocultos += 1
+                    crear_explosion(nave.rect.centerx, nave.rect.centery)
+
+            # Eliminar enemigos y actualizar puntos
+            for enemigo in enemigos_a_eliminar:
+                if enemigo in enemigos:
+                    if isinstance(enemigo, NaveRoja):
+                        contador_disparo_triple += 1
+                        if contador_disparo_triple >= 30:
+                            modificadores_activos.append(DisparoTriple(nave))
+                            contador_disparo_triple = 0
+                    elif isinstance(enemigo, NaveVerde):
+                        contador_escudo += 1
+                        if contador_escudo >= 30:
+                            modificadores_activos.append(Escudo(nave, burbuja_escudo_img))
+                            contador_escudo = 0
+                    elif isinstance(enemigo, NaveAmarilla):
+                        pass  # Sin modificador
+                    elif isinstance(enemigo, NaveNaranja):
                         enemigo.otorgar_modificador(nave, modificadores_activos, burbuja_escudo_img)
+                        # Mostrar mensaje según el tipo
                         if modificadores_activos:
                             mod = modificadores_activos[-1]
                             if isinstance(mod, Escudo):
                                 mostrar_mensaje_modificador("¡Escudo obtenido!", (100, 200, 255))
                             elif isinstance(mod, DisparoTriple):
                                 mostrar_mensaje_modificador("¡Disparo triple!", (255, 200, 0))
-                    puntos += 100
                     enemigos.remove(enemigo)
-                    enemigos_abatidos += 1
-                    enemigos_abatidos_ocultos += 1
-                    crear_explosion(enemigo.rect.centerx, enemigo.rect.centery)
-                    if bala not in balas_a_eliminar:
-                        balas_a_eliminar.append(bala)
-                    break
-            if jefe and bala.rect.colliderect(jefe.rect):
-                if hasattr(jefe, 'escudo') and jefe.escudo and jefe.escudo.activo:
-                    jefe.escudo.recibir_golpe()
-                else:
-                    jefe.vida -= 1
-                if jefe.vida <= 0:
-                    puntos += 100000
-                    enemigos_abatidos += 10
-                    jefes_derrotados += 1
-                    crear_explosion(jefe.rect.centerx, jefe.rect.centery, 200)  # Explosión más grande para el jefe
-                    jefe = None
-                    balas_enemigas.clear()
-                    await mostrar_pantalla_pausa("YOU WIN!")
-                    break
-                if bala in balas:
-                    balas.remove(bala)
-                break
-            
-        # Eliminar balas que han colisionado o salido de la pantalla
-        for bala in balas_a_eliminar:
-            if bala in balas:
-                balas.remove(bala)
-                
-        # Actualizar balas enemigas
-        balas_enemigas_a_eliminar = []
-        for bala_enemiga in balas_enemigas:
-            bala_enemiga.mover()
-            # Eliminar balas que salgan de la pantalla
-            if bala_enemiga.rect.top > ALTO:
-                balas_enemigas_a_eliminar.append(bala_enemiga)
-                continue
-            
-            bala_enemiga.dibujar(surface_juego)
-            if bala_enemiga.rect.colliderect(nave.rect):
-                escudo_activado = False
-                for mod in modificadores_activos:
-                    if isinstance(mod, Escudo) and mod.activo:
-                        mod.recibir_golpe()
-                        escudo_activado = True
-                        break
-                if not escudo_activado:
-                    vida -= 1
-                crear_explosion(nave.rect.centerx, nave.rect.centery)
-                balas_enemigas_a_eliminar.append(bala_enemiga)
-                continue
-            
+                    puntos -= 50
 
-        # Comprobar colisiones con balas del jugador
-        for bala in balas[:]:  # Hacer una copia de la lista para iterar
-            for bala_enemiga in balas_enemigas[:]:  # Hacer una copia de la lista para iterar
-                if bala.rect.colliderect(bala_enemiga.rect):
+            # Actualizar balas
+            balas_a_eliminar = []
+            for bala in balas[:]:  # Hacer una copia de la lista para iterar
+                bala.mover()
+                # Eliminar balas que salgan de la pantalla
+                if bala.rect.bottom < 0:
+                    balas_a_eliminar.append(bala)
+                    continue
+
+                bala.dibujar(surface_juego)
+                # Comprobar colisiones con enemigos
+                for enemigo in enemigos:
+                    if bala.rect.colliderect(enemigo.rect):
+                        # --- MODIFICADOR POR AURA DE FUEGO --- OBSOLETO ---
+                        if isinstance(enemigo, NaveNaranja):
+                            enemigo.otorgar_modificador(nave, modificadores_activos, burbuja_escudo_img)
+                            if modificadores_activos:
+                                mod = modificadores_activos[-1]
+                                if isinstance(mod, Escudo):
+                                    mostrar_mensaje_modificador("¡Escudo obtenido!", (100, 200, 255))
+                                elif isinstance(mod, DisparoTriple):
+                                    mostrar_mensaje_modificador("¡Disparo triple!", (255, 200, 0))
+                        puntos += 100
+                        enemigos.remove(enemigo)
+                        enemigos_abatidos += 1
+                        enemigos_abatidos_ocultos += 1
+                        crear_explosion(enemigo.rect.centerx, enemigo.rect.centery)
+                        if bala not in balas_a_eliminar:
+                            balas_a_eliminar.append(bala)
+                        break
+                if jefe and bala.rect.colliderect(jefe.rect):
+                    if hasattr(jefe, 'escudo') and jefe.escudo and jefe.escudo.activo:
+                        jefe.escudo.recibir_golpe()
+                    else:
+                        jefe.vida -= 1
+                    if jefe.vida <= 0:
+                        puntos += 100000
+                        enemigos_abatidos += 10
+                        jefes_derrotados += 1
+                        crear_explosion(jefe.rect.centerx, jefe.rect.centery, 200)  # Explosión más grande para el jefe
+                        jefe = None
+                        balas_enemigas.clear()
+                        await mostrar_pantalla_pausa("YOU WIN!")
+                        break
                     if bala in balas:
                         balas.remove(bala)
-                    if bala_enemiga in balas_enemigas:
-                        balas_enemigas.remove(bala_enemiga)
-                    crear_explosion(bala_enemiga.rect.centerx, bala_enemiga.rect.centery, 50)  # Explosión pequeña
                     break
-            
-        # Eliminar balas enemigas que han colisionado o salido de la pantalla
-        for bala_enemiga in balas_enemigas_a_eliminar:
-            if bala_enemiga in balas_enemigas:
-                balas_enemigas.remove(bala_enemiga)
-                
-        # Actualizar explosiones
-        explosiones_a_eliminar = []
-        for explosion in explosiones:
-            terminada = explosion.actualizar()
-            if terminada:
-                explosiones_a_eliminar.append(explosion)
+
+            # Eliminar balas que han colisionado o salido de la pantalla
+            for bala in balas_a_eliminar:
+                if bala in balas:
+                    balas.remove(bala)
+
+            # Actualizar balas enemigas
+            balas_enemigas_a_eliminar = []
+            for bala_enemiga in balas_enemigas:
+                bala_enemiga.mover()
+                # Eliminar balas que salgan de la pantalla
+                if bala_enemiga.rect.top > ALTO:
+                    balas_enemigas_a_eliminar.append(bala_enemiga)
+                    continue
+
+                bala_enemiga.dibujar(surface_juego)
+                if bala_enemiga.rect.colliderect(nave.rect):
+                    escudo_activado = False
+                    for mod in modificadores_activos:
+                        if isinstance(mod, Escudo) and mod.activo:
+                            mod.recibir_golpe()
+                            escudo_activado = True
+                            break
+                    if not escudo_activado:
+                        vida -= 1
+                    crear_explosion(nave.rect.centerx, nave.rect.centery)
+                    balas_enemigas_a_eliminar.append(bala_enemiga)
+                    continue
+
+
+            # Comprobar colisiones con balas del jugador
+            for bala in balas[:]:  # Hacer una copia de la lista para iterar
+                for bala_enemiga in balas_enemigas[:]:  # Hacer una copia de la lista para iterar
+                    if bala.rect.colliderect(bala_enemiga.rect):
+                        if bala in balas:
+                            balas.remove(bala)
+                        if bala_enemiga in balas_enemigas:
+                            balas_enemigas.remove(bala_enemiga)
+                        crear_explosion(bala_enemiga.rect.centerx, bala_enemiga.rect.centery, 50)  # Explosión pequeña
+                        break
+
+            # Eliminar balas enemigas que han colisionado o salido de la pantalla
+            for bala_enemiga in balas_enemigas_a_eliminar:
+                if bala_enemiga in balas_enemigas:
+                    balas_enemigas.remove(bala_enemiga)
+
+            # Actualizar explosiones
+            explosiones_a_eliminar = []
+            for explosion in explosiones:
+                terminada = explosion.actualizar()
+                if terminada:
+                    explosiones_a_eliminar.append(explosion)
+                else:
+                    explosion.dibujar(surface_juego)
+            # Eliminar explosiones terminadas
+            for explosion in explosiones_a_eliminar:
+                if explosion in explosiones:
+                    explosiones.remove(explosion)
+
+            # Dibujar nave
+            for mod in modificadores_activos:
+                if isinstance(mod, Escudo) and mod.activo:
+                    mod.dibujar(surface_juego)
+            nave.dibujar(surface_juego)
+
+            # Mostrar iconos de modificadores activos (solo uno por tipo)
+            x_icon = 20
+            y_icon = 120
+
+            # Mostrar solo un icono de escudo si hay al menos uno activo
+            if any(isinstance(mod, Escudo) and mod.activo for mod in modificadores_activos):
+                surface_juego.blit(icono_escudo, (x_icon, y_icon))
+                y_icon += 36
+
+            # Mostrar solo un icono de disparo triple si hay al menos uno activo
+            if any(isinstance(mod, DisparoTriple) and mod.activo for mod in modificadores_activos):
+                surface_juego.blit(icono_triple, (x_icon, y_icon))
+                y_icon += 36
+
+            # Renderizar texto de vida, puntos y enemigos abatidos (fuera del bucle)
+            texto_vida = FUENTE_HUD.render(f"Vida: {vida}", True, VERDE)
+            texto_puntos = FUENTE_HUD.render(f"Puntos: {puntos}", True, ROJO)
+            texto_enemigos_abatidos = FUENTE_HUD.render(f"Enemigos: {enemigos_abatidos}", True, BLANCO)
+            texto_mundo = FUENTE_HUD.render(f"Mundo: {mundo}", True, BLANCO)
+
+            # Mostrar vidas de escudo sumando todos los escudos activos
+            escudo_vidas = sum(mod.duracion for mod in modificadores_activos if isinstance(mod, Escudo) and mod.activo)
+
+            if escudo_vidas > 0:
+                texto_escudo = FUENTE_HUD.render(f"Escudo: {escudo_vidas}", True, (100, 200, 255))
+                surface_juego.blit(texto_escudo, (20, 90))
+
+            # Lado izquierdo (igual que antes)
+            surface_juego.blit(texto_vida, (20, 60))
+            surface_juego.blit(texto_puntos, (20, 20))
+
+            # Lado derecho (alineados con vida y puntos)
+            surface_juego.blit(texto_enemigos_abatidos, (ANCHO_BASE - texto_enemigos_abatidos.get_width() - 20, 20))
+            surface_juego.blit(texto_mundo, (ANCHO_BASE - texto_mundo.get_width() - 20, 60))
+
+            # Limpiar modificadores inactivos
+            modificadores_activos = [mod for mod in modificadores_activos if getattr(mod, 'activo', True)]
+
+            # Limpiar mensaje de modificador si ha pasado el tiempo
+            if mensaje_modificador and pygame.time.get_ticks() < mensaje_modificador_tiempo:
+                superficie = FUENTE_HUD.render(mensaje_modificador, True, mensaje_modificador_color)
+                surface_juego.blit(superficie, (ANCHO_BASE // 2 - superficie.get_width() // 2, ALTO_BASE // 2 - 100))
             else:
-                explosion.dibujar(surface_juego)
-        # Eliminar explosiones terminadas
-        for explosion in explosiones_a_eliminar:
-            if explosion in explosiones:
-                explosiones.remove(explosion)
-                
-        # Dibujar nave
-        for mod in modificadores_activos:
-            if isinstance(mod, Escudo) and mod.activo:
-                mod.dibujar(surface_juego)
-        nave.dibujar(surface_juego)
-        
-        # Mostrar iconos de modificadores activos (solo uno por tipo)
-        x_icon = 20
-        y_icon = 120
-        
-        # Mostrar solo un icono de escudo si hay al menos uno activo
-        if any(isinstance(mod, Escudo) and mod.activo for mod in modificadores_activos):
-            surface_juego.blit(icono_escudo, (x_icon, y_icon))
-            y_icon += 36
-        
-        # Mostrar solo un icono de disparo triple si hay al menos uno activo
-        if any(isinstance(mod, DisparoTriple) and mod.activo for mod in modificadores_activos):
-            surface_juego.blit(icono_triple, (x_icon, y_icon))
-            y_icon += 36
-        
-        # Renderizar texto de vida, puntos y enemigos abatidos (fuera del bucle)
-        texto_vida = FUENTE_HUD.render(f"Vida: {vida}", True, VERDE)
-        texto_puntos = FUENTE_HUD.render(f"Puntos: {puntos}", True, ROJO)
-        texto_enemigos_abatidos = FUENTE_HUD.render(f"Enemigos: {enemigos_abatidos}", True, BLANCO)
-        texto_mundo = FUENTE_HUD.render(f"Mundo: {mundo}", True, BLANCO)
-        
-        # Mostrar vidas de escudo sumando todos los escudos activos
-        escudo_vidas = sum(mod.duracion for mod in modificadores_activos if isinstance(mod, Escudo) and mod.activo)
+                mensaje_modificador = None
 
-        if escudo_vidas > 0:
-            texto_escudo = FUENTE_HUD.render(f"Escudo: {escudo_vidas}", True, (100, 200, 255))
-            surface_juego.blit(texto_escudo, (20, 90))
+            # Mostrar contador de tiempo en el centro superior
+            tiempo_actual = pygame.time.get_ticks()
+            tiempo_transcurrido_nivel = int((tiempo_actual - tiempo_inicio_nivel) / 1000)
+            texto_tiempo = FUENTE_HUD.render(f" {tiempo_transcurrido_nivel}s", True, BLANCO)
+            surface_juego.blit(texto_tiempo, (ANCHO_BASE // 2 - texto_tiempo.get_width() // 2, 20))
 
-        # Lado izquierdo (igual que antes)
-        surface_juego.blit(texto_vida, (20, 60))
-        surface_juego.blit(texto_puntos, (20, 20))
+            # Mostrar el surface_juego escalado y centrado (letterbox)
+            blit_centrado_letterbox()
+            await asyncio.sleep(0)
 
-        # Lado derecho (alineados con vida y puntos)
-        surface_juego.blit(texto_enemigos_abatidos, (ANCHO_BASE - texto_enemigos_abatidos.get_width() - 20, 20))
-        surface_juego.blit(texto_mundo, (ANCHO_BASE - texto_mundo.get_width() - 20, 60))
-        
-        # Limpiar modificadores inactivos
-        modificadores_activos = [mod for mod in modificadores_activos if getattr(mod, 'activo', True)]
-        
-        # Limpiar mensaje de modificador si ha pasado el tiempo
-        if mensaje_modificador and pygame.time.get_ticks() < mensaje_modificador_tiempo:
-            superficie = FUENTE_HUD.render(mensaje_modificador, True, mensaje_modificador_color)
-            surface_juego.blit(superficie, (ANCHO_BASE // 2 - superficie.get_width() // 2, ALTO_BASE // 2 - 100))
+            # Salir del bucle de juego
+        if vida <= 0:
+            if primera_partida and puntos < 0:
+                await mostrar_mensaje_malo_y_cambiar()
+            else:
+                manejador_musica.reproducir_loose()
+                await mostrar_game_over_y_guardar(puntos)
+            # El bucle while True hará que se reinicie todo el flujo automáticamente
         else:
-            mensaje_modificador = None
-            
-        # Mostrar contador de tiempo en el centro superior
-        tiempo_actual = pygame.time.get_ticks()
-        tiempo_transcurrido_nivel = int((tiempo_actual - tiempo_inicio_nivel) / 1000)
-        texto_tiempo = FUENTE_HUD.render(f" {tiempo_transcurrido_nivel}s", True, BLANCO)
-        surface_juego.blit(texto_tiempo, (ANCHO_BASE // 2 - texto_tiempo.get_width() // 2, 20))
-
-        # Mostrar el surface_juego escalado y centrado (letterbox)
-        blit_centrado_letterbox()
-        await asyncio.sleep(0)
-
-        # Salir del bucle de juego
-    if vida <= 0:
-        if primera_partida and puntos < 0:
-            await mostrar_mensaje_malo_y_cambiar()
-        else:
-            manejador_musica.reproducir_loose()
-            await mostrar_game_over_y_guardar(puntos)
-        # El bucle while True hará que se reinicie todo el flujo automáticamente
-    else:
-        pass
-    primera_partida = False
-
-asyncio.run(main())
+            pass
+        primera_partida = False
