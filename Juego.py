@@ -28,8 +28,9 @@ from ManejadorMusica import ManejadorMusica
 BASE_PATH = os.path.dirname(os.path.abspath(__file__)) # Directorio base del juego 
 IMG_PATH = os.path.join(BASE_PATH, "img") # Ruta de las imágenes
 FUENTES_PATH = os.path.join(BASE_PATH, "FUENTES") # Ruta de las fuentes
+print("[JUEGO] Módulo cargado OK")
 
-manejador_musica = ManejadorMusica(BASE_PATH) # Ruta base para la música
+manejador_musica = None  # se inicializa en init_pygame()
 
 
 # Controlador de canciones
@@ -734,31 +735,37 @@ jugando = True
 async def init_pygame():
     """Inicializa pygame y carga todos los recursos. Se llama desde main() dentro del event loop."""
     global VENTANA, surface_juego, reloj, fondo_animado, fondo_inicio_img
-    global FUENTE, FUENTE_HUD, sprite_manager
+    global FUENTE, FUENTE_HUD, sprite_manager, manejador_musica
     global sprite_nave, sprite_nave_original, sprite_enemigo, sprite_jefe
     global sprite_bala, sprite_bala_enemiga, sprite_explosion
     global sprite_nave_verde, sprite_nave_roja, sprite_nave_amarilla, sprite_nave_naranja
     global icono_escudo, icono_triple, burbuja_escudo_img
     global nave, tiempo_ultimo_jefe, tiempo_inicio_nivel
 
+    print("[INIT] Iniciando pygame...")
     pygame.init()
     pygame.mixer.init()
     await asyncio.sleep(0)
 
+    print("[INIT] Creando ventana...")
+    manejador_musica = ManejadorMusica(BASE_PATH)
     pygame.display.set_caption("Pixel Invaders")
     VENTANA = pygame.display.set_mode([ANCHO, ALTO], pygame.RESIZABLE)
     surface_juego = pygame.Surface((ANCHO_BASE, ALTO_BASE))
     reloj = pygame.time.Clock()
     await asyncio.sleep(0)
 
+    print("[INIT] Cargando iconos...")
     icono_escudo = pygame.image.load(os.path.join(IMG_PATH, "icono_escudo.png")).convert_alpha()
     icono_triple = pygame.image.load(os.path.join(IMG_PATH, "icono_triple.png")).convert_alpha()
     burbuja_escudo_img = pygame.image.load(os.path.join(IMG_PATH, "burbuja_escudo.png")).convert_alpha()
     await asyncio.sleep(0)
 
+    print("[INIT] Creando fondo animado...")
     fondo_animado = FondoAnimado(ANCHO, ALTO, BASE_PATH)
     await asyncio.sleep(0)
 
+    print("[INIT] Cargando fuentes...")
     try:
         FUENTE = pygame.font.Font(os.path.join(FUENTES_PATH, "PressStart2P-Regular.ttf"), 40)
         FUENTE_HUD = pygame.font.Font(os.path.join(FUENTES_PATH, "PressStart2P-Regular.ttf"), 20)
@@ -768,6 +775,7 @@ async def init_pygame():
         FUENTE_HUD = pygame.font.SysFont("Consolas", 20)
     await asyncio.sleep(0)
 
+    print("[INIT] Cargando sprites SVG...")
     sprite_manager = SpriteManager()
     try:
         svg_nave = open(os.path.join(IMG_PATH, 'nave-sprite.svg'), 'r').read()
@@ -813,6 +821,7 @@ async def init_pygame():
     nave.sprite = sprite_nave
     tiempo_ultimo_jefe = pygame.time.get_ticks()
     tiempo_inicio_nivel = pygame.time.get_ticks()
+    print("[INIT] Inicialización completa!")
 
 
 async def main():
